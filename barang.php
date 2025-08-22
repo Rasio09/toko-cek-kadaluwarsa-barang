@@ -28,7 +28,17 @@ if (isset($_GET['hapus'])) {
     exit;
 }
 
-$result = mysqli_query($conn, "SELECT * FROM barang ORDER BY tanggal_exp ASC");
+// fitur search barang
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+if ($search !== '') {
+    $search_escaped = mysqli_real_escape_string($conn, $search);
+    $result = mysqli_query($conn, "SELECT * FROM barang WHERE 
+        nama_barang LIKE '%$search_escaped%' OR 
+        kategori LIKE '%$search_escaped%' 
+        ORDER BY tanggal_exp ASC");
+} else {
+    $result = mysqli_query($conn, "SELECT * FROM barang ORDER BY tanggal_exp ASC");
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -41,6 +51,18 @@ $result = mysqli_query($conn, "SELECT * FROM barang ORDER BY tanggal_exp ASC");
 
 <div class="container">
   <h2>Daftar Barang Aktif</h2>
+  
+  <!-- Form Search Barang -->
+  <form class="mb-3" method="get" action="barang.php">
+    <div class="input-group">
+      <input type="text" name="search" class="form-control" placeholder="Cari nama/kategori barang..." value="<?= htmlspecialchars($search) ?>">
+      <button class="btn btn-primary" type="submit">Cari</button>
+      <?php if ($search !== ''): ?>
+        <a href="barang.php" class="btn btn-outline-secondary">Reset</a>
+      <?php endif; ?>
+    </div>
+  </form>
+
   <table class="table table-bordered table-striped align-middle">
     <thead class="table-dark">
       <tr>
@@ -53,6 +75,11 @@ $result = mysqli_query($conn, "SELECT * FROM barang ORDER BY tanggal_exp ASC");
       </tr>
     </thead>
     <tbody>
+      <?php if (mysqli_num_rows($result) === 0): ?>
+        <tr>
+          <td colspan="6" class="text-center">Tidak ada barang ditemukan.</td>
+        </tr>
+      <?php endif; ?>
       <?php while ($row = mysqli_fetch_assoc($result)) : ?>
         <tr>
           <td><?= $row['nama_barang'] ?></td>
