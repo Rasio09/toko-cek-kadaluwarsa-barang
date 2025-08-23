@@ -20,6 +20,15 @@ while ($row = mysqli_fetch_assoc($result)) {
         break;
     }
 }
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+if (!isset($_SESSION['user'])) {
+    header("Location: login.php");
+    exit;
+}
+$role = $_SESSION['user']['role'];
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -50,14 +59,18 @@ while ($row = mysqli_fetch_assoc($result)) {
           </a>
           <ul class="dropdown-menu" aria-labelledby="listBarangDropdown">
             <li><a class="dropdown-item" href="barang.php">Barang</a></li>
-            <li><a class="dropdown-item" href="tambah_barang.php">Tambah Barang</a></li>
+            <?php if ($role === 'admin'): ?>
+              <li><a class="dropdown-item" href="tambah_barang.php">Tambah Barang</a></li>
+            <?php endif; ?>
             <li><a class="dropdown-item" href="cek_barang.php">Cek Barang</a></li>
             <li><a class="dropdown-item" href="record.php">Record Barang</a></li>
           </ul>
         </li>
+        <?php if ($role === 'admin'): ?>
         <li class="nav-item">
-          <a class="nav-link" href="brand.php">List Brand</a>
+          <a class="nav-link" href="user_management.php">User Management</a>
         </li>
+        <?php endif; ?>
       </ul>
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
         <li class="nav-item dropdown">

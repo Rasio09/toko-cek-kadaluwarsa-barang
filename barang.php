@@ -1,5 +1,10 @@
 <?php
 include 'koneksi.php';
+if (!isset($_SESSION['user'])) {
+    header("Location: login.php");
+    exit;
+}
+$role = $_SESSION['user']['role'];
 
 // aksi hapus barang
 if (isset($_GET['hapus'])) {
@@ -16,9 +21,11 @@ if (isset($_GET['hapus'])) {
         $jumlah = $barang['jumlah'];
         $tgl_masuk = $barang['tanggal_masuk'];
         $tgl_exp = $barang['tanggal_exp'];
+        $harga_beli = $barang['harga_beli'];
+        $harga_jual = $barang['harga_jual'];
 
-        mysqli_query($conn, "INSERT INTO barang_record (nama_barang, kategori, jumlah, tanggal_masuk, tanggal_exp, status) 
-                             VALUES ('$nama','$kategori','$jumlah','$tgl_masuk','$tgl_exp','dibuang')");
+        mysqli_query($conn, "INSERT INTO barang_record (nama_barang, kategori, jumlah, tanggal_masuk, tanggal_exp, harga_beli, harga_jual, status) 
+                             VALUES ('$nama','$kategori','$jumlah','$tgl_masuk','$tgl_exp','$harga_beli','$harga_jual','dibuang')");
 
         // hapus dari tabel barang
         mysqli_query($conn, "DELETE FROM barang WHERE id=$id");
@@ -73,9 +80,11 @@ if ($search !== '') {
             <li><a class="dropdown-item" href="record.php">Record Barang</a></li>
           </ul>
         </li>
+        <?php if ($role === 'admin'): ?>
         <li class="nav-item">
-          <a class="nav-link" href="brand.php">List Brand</a>
+          <a class="nav-link" href="user_management.php">User Management</a>
         </li>
+        <?php endif; ?>
       </ul>
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
         <li class="nav-item dropdown">
@@ -116,13 +125,19 @@ if ($search !== '') {
         <th>Jumlah</th>
         <th>Tanggal Masuk</th>
         <th>Tanggal Expired</th>
-        <th>Aksi</th>
+        <?php if ($role === 'admin'): ?>
+          <th>Harga Beli/pcs</th>
+        <?php endif; ?>
+        <th>Harga Jual/pcs</th>
+        <?php if ($role === 'admin'): ?>
+          <th>Aksi</th>
+        <?php endif; ?>
       </tr>
     </thead>
     <tbody>
       <?php if (mysqli_num_rows($result) === 0): ?>
         <tr>
-          <td colspan="6" class="text-center">Tidak ada barang ditemukan.</td>
+          <td colspan="<?= $role === 'admin' ? '8' : '6' ?>" class="text-center">Tidak ada barang ditemukan.</td>
         </tr>
       <?php endif; ?>
       <?php while ($row = mysqli_fetch_assoc($result)) : ?>
@@ -132,6 +147,11 @@ if ($search !== '') {
           <td><?= $row['jumlah'] ?></td>
           <td><?= $row['tanggal_masuk'] ?></td>
           <td><?= $row['tanggal_exp'] ?></td>
+          <?php if ($role === 'admin'): ?>
+            <td><?= number_format($row['harga_beli'],2) ?></td>
+          <?php endif; ?>
+          <td><?= number_format($row['harga_jual'],2) ?></td>
+          <?php if ($role === 'admin'): ?>
           <td>
             <!-- Tombol buka modal -->
             <button class="btn btn-danger btn-sm" 
@@ -159,6 +179,7 @@ if ($search !== '') {
               </div>
             </div>
           </td>
+          <?php endif; ?>
         </tr>
       <?php endwhile; ?>
     </tbody>

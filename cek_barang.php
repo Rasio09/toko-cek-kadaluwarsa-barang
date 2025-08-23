@@ -5,6 +5,15 @@ $today = date('Y-m-d');
 
 $sql = "SELECT * FROM barang";
 $result = mysqli_query($conn, $sql);
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+if (!isset($_SESSION['user'])) {
+    header("Location: login.php");
+    exit;
+}
+$role = $_SESSION['user']['role'];
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -40,9 +49,11 @@ $result = mysqli_query($conn, $sql);
             <li><a class="dropdown-item" href="record.php">Record Barang</a></li>
           </ul>
         </li>
+        <?php if ($role === 'admin'): ?>
         <li class="nav-item">
-          <a class="nav-link" href="brand.php">List Brand</a>
+          <a class="nav-link" href="user_management.php">User Management</a>
         </li>
+        <?php endif; ?>
       </ul>
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
         <li class="nav-item dropdown">

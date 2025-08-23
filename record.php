@@ -1,5 +1,10 @@
 <?php
 include 'koneksi.php';
+if (!isset($_SESSION['user'])) {
+    header("Location: login.php");
+    exit;
+}
+$role = $_SESSION['user']['role'];
 
 // aksi restore
 if (isset($_GET['restore'])) {
@@ -15,10 +20,12 @@ if (isset($_GET['restore'])) {
         $jumlah = $record['jumlah'];
         $tgl_masuk = $record['tanggal_masuk'];
         $tgl_exp = $record['tanggal_exp'];
+        $harga_beli = isset($record['harga_beli']) ? $record['harga_beli'] : 0;
+        $harga_jual = isset($record['harga_jual']) ? $record['harga_jual'] : 0;
 
         // kembalikan ke tabel barang
-        mysqli_query($conn, "INSERT INTO barang (nama_barang, kategori, jumlah, tanggal_masuk, tanggal_exp, status) 
-                             VALUES ('$nama','$kategori','$jumlah','$tgl_masuk','$tgl_exp','aman')");
+        mysqli_query($conn, "INSERT INTO barang (nama_barang, kategori, jumlah, tanggal_masuk, tanggal_exp, harga_beli, harga_jual, status) 
+                             VALUES ('$nama','$kategori','$jumlah','$tgl_masuk','$tgl_exp','$harga_beli','$harga_jual','aman')");
 
         // hapus dari record
         mysqli_query($conn, "DELETE FROM barang_record WHERE id=$id");
@@ -73,9 +80,11 @@ if ($search !== '') {
             <li><a class="dropdown-item" href="record.php">Record Barang</a></li>
           </ul>
         </li>
+        <?php if ($role === 'admin'): ?>
         <li class="nav-item">
-          <a class="nav-link" href="brand.php">List Brand</a>
+          <a class="nav-link" href="user_management.php">User Management</a>
         </li>
+        <?php endif; ?>
       </ul>
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
         <li class="nav-item dropdown">
@@ -116,14 +125,20 @@ if ($search !== '') {
         <th>Jumlah</th>
         <th>Tanggal Masuk</th>
         <th>Tanggal Expired</th>
-        <th>Tanggal Dibuang</th>
-        <th>Aksi</th>
+        <?php if ($role === 'admin'): ?>
+          <th>Harga Beli/pcs</th>
+        <?php endif; ?>
+        <th>Harga Jual/pcs</th>
+        <th>Status</th>
+        <?php if ($role === 'admin'): ?>
+          <th>Aksi</th>
+        <?php endif; ?>
       </tr>
     </thead>
     <tbody>
       <?php if (mysqli_num_rows($result) === 0): ?>
         <tr>
-          <td colspan="6" class="text-center">Tidak ada barang ditemukan.</td>
+          <td colspan="<?= $role === 'admin' ? '9' : '7' ?>" class="text-center">Tidak ada barang ditemukan.</td>
         </tr>
       <?php endif; ?>
       <?php while ($row = mysqli_fetch_assoc($result)) : ?>
@@ -133,34 +148,40 @@ if ($search !== '') {
           <td><?= $row['jumlah'] ?></td>
           <td><?= $row['tanggal_masuk'] ?></td>
           <td><?= $row['tanggal_exp'] ?></td>
-          <td><?= $row['tanggal_dibuang'] ?></td>
-          <td>
-            <!-- Tombol buka modal -->
-            <button class="btn btn-success btn-sm"
-                    data-bs-toggle="modal"
-                    data-bs-target="#restoreModal<?= $row['id'] ?>">
-              Restore
-            </button>
+          <?php if ($role === 'admin'): ?>
+            <td><?= isset($row['harga_beli']) ? number_format($row['harga_beli'],2) : '0.00' ?></td>
+          <?php endif; ?>
+          <td><?= isset($row['harga_jual']) ? number_format($row['harga_jual'],2) : '0.00' ?></td>
+          <td><?= $row['status'] ?></td>
+          <?php if ($role === 'admin'): ?>
+            <td>
+              <!-- Tombol buka modal restore -->
+              <button class="btn btn-success btn-sm"
+                      data-bs-toggle="modal"
+                      data-bs-target="#restoreModal<?= $row['id'] ?>">
+                Restore
+              </button>
 
-            <!-- Modal Bootstrap -->
-            <div class="modal fade" id="restoreModal<?= $row['id'] ?>" tabindex="-1" aria-hidden="true">
-              <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                  <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title">Konfirmasi Restore</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-                  <div class="modal-body text-center">
-                    <p>Apakah Anda yakin ingin mengembalikan barang <strong><?= $row['nama_barang'] ?></strong> ke daftar aktif?</p>
-                  </div>
-                  <div class="modal-footer justify-content-center">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <a href="record.php?restore=<?= $row['id'] ?>" class="btn btn-success">Ya, Kembalikan</a>
+              <!-- Modal Bootstrap Restore -->
+              <div class="modal fade" id="restoreModal<?= $row['id'] ?>" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                  <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                      <h5 class="modal-title">Konfirmasi Restore</h5>
+                      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                      <p>Kembalikan barang <strong><?= $row['nama_barang'] ?></strong> ke daftar barang?</p>
+                    </div>
+                    <div class="modal-footer justify-content-center">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                      <a href="record.php?restore=<?= $row['id'] ?>" class="btn btn-success">Ya, Kembalikan</a>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </td>
+            </td>
+          <?php endif; ?>
         </tr>
       <?php endwhile; ?>
     </tbody>
@@ -168,7 +189,7 @@ if ($search !== '') {
   <a href="index.php" class="btn btn-secondary">Kembali</a>
   <a href="barang.php" class="btn btn-primary">📦 Lihat Daftar Barang</a>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
