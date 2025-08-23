@@ -103,7 +103,9 @@ $role = $_SESSION['user']['role'];
   <?php endif; ?>
 
   <a href="barang.php" class="btn btn-primary">📦 Daftar Barang</a>
-  <a href="tambah_barang.php" class="btn btn-success">➕ Input Barang</a>
+  <?php if ($role === 'admin'): ?>
+    <a href="tambah_barang.php" class="btn btn-success">➕ Input Barang</a>
+  <?php endif; ?>
   <a href="cek_barang.php" class="btn btn-warning">⚠️ Cek Barang</a>
 </div>
 

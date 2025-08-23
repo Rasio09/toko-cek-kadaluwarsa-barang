@@ -7,6 +7,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     header("Location: login.php");
     exit;
 }
+$role = $_SESSION['user']['role'];
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $nama = $_POST['nama_barang'];
@@ -33,10 +34,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   <meta charset="UTF-8">
   <title>Tambah Barang</title>
   <!-- Bootstrap CSS -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 </head>
 <body class="p-4">
 
+<!-- Navbar Bootstrap -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
   <div class="container">
     <a class="navbar-brand" href="index.php">TokoApp</a>
@@ -46,23 +49,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <div class="collapse navbar-collapse" id="navbarMain">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item">
-          <a class="nav-link" href="index.php">Dashboard</a>
+          <a class="nav-link" href="index.php">Home</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="barang.php">Data Barang</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="transaksi.php">Transaksi</a>
-        </li>
-        <?php if ($_SESSION['user']['role'] === 'admin'): ?>
+        
+        <?php if ($role === 'admin'): ?>
         <li class="nav-item">
           <a class="nav-link" href="user_management.php">User Management</a>
         </li>
         <?php endif; ?>
       </ul>
-      <ul class="navbar-nav">
-        <li class="nav-item">
-          <a class="nav-link" href="logout.php">Logout</a>
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-person-circle fs-5"></i>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" href="profil.php">Profil</a></li>
+            <li><a class="dropdown-item" href="change_password.php">Change Password</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="logout.php">Logout</a></li>
+          </ul>
         </li>
       </ul>
     </div>
