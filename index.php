@@ -73,6 +73,9 @@ $role = $_SESSION['user']['role'];
         <?php endif; ?>
       </ul>
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+        <li class="nav-item d-flex align-items-center me-2">
+          <span class="text-white fw-semibold"><?= htmlspecialchars($_SESSION['user']['username']) ?></span>
+        </li>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="bi bi-person-circle fs-5"></i>

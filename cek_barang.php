@@ -35,6 +35,9 @@ $role = $_SESSION['user']['role'];
     </button>
     <div class="collapse navbar-collapse" id="navbarMain">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item d-flex align-items-center me-2">
+          <span class="text-white fw-semibold"><?= htmlspecialchars($_SESSION['user']['username']) ?></span>
+        </li>
         <li class="nav-item">
           <a class="nav-link" href="index.php">Home</a>
         </li>
