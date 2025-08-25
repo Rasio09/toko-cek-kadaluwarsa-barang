@@ -3,7 +3,7 @@ include 'koneksi.php';
 date_default_timezone_set("Asia/Jakarta");
 
 // cek barang yang kadaluarsa atau perlu dicek
-$today = date('Y-m-d');
+$today = date('Y-m-d'); 
 $sql = "SELECT * FROM barang";
 $result = mysqli_query($conn, $sql);
 
@@ -60,11 +60,14 @@ $role = $_SESSION['user']['role'];
           <ul class="dropdown-menu" aria-labelledby="listBarangDropdown">
             <li><a class="dropdown-item" href="barang.php">Barang</a></li>
             <?php if ($role === 'admin'): ?>
-              <li><a class="dropdown-item" href="tambah_barang.php">Tambah Barang</a></li>
+            <li><a class="dropdown-item" href="tambah_barang.php">Tambah Barang</a></li>
             <?php endif; ?>
             <li><a class="dropdown-item" href="cek_barang.php">Cek Barang</a></li>
             <li><a class="dropdown-item" href="record.php">Record Barang</a></li>
           </ul>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="brand.php">List Brand</a>
         </li>
         <?php if ($role === 'admin'): ?>
         <li class="nav-item">
@@ -84,13 +87,36 @@ $role = $_SESSION['user']['role'];
             <li><a class="dropdown-item" href="profil.php">Profil</a></li>
             <li><a class="dropdown-item" href="change_password.php">Change Password</a></li>
             <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="logout.php">Logout</a></li>
+            <li>
+              <button class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                Logout
+              </button>
+            </li>
           </ul>
         </li>
       </ul>
     </div>
   </div>
 </nav>
+
+<!-- Modal Logout -->
+<div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="logoutModalLabel">Konfirmasi Logout</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <p>Apakah Anda yakin ingin logout?</p>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tidak</button>
+        <a href="logout.php" class="btn btn-danger">Ya, Logout</a>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="container">
   <h1 class="mb-4">Dashboard Pemilik Toko</h1>

@@ -62,13 +62,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <li><a class="dropdown-item" href="profil.php">Profil</a></li>
             <li><a class="dropdown-item" href="change_password.php">Change Password</a></li>
             <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="logout.php">Logout</a></li>
+            <li>
+              <button class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                Logout
+              </button>
+            </li>
           </ul>
         </li>
       </ul>
     </div>
   </div>
 </nav>
+
+<!-- Modal Logout -->
+<div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="logoutModalLabel">Konfirmasi Logout</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <p>Apakah Anda yakin ingin logout?</p>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tidak</button>
+        <a href="logout.php" class="btn btn-danger">Ya, Logout</a>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 <div class="container">
