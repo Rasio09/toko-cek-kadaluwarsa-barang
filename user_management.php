@@ -20,6 +20,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $msg = "Gagal: " . mysqli_error($conn);
     }
 }
+if (isset($_POST['tambah'])) {
+    $nama = $_POST['nama'];
+    $ttl = $_POST['ttl'];
+    $alamat = $_POST['alamat'];
+    $email = $_POST['email'];
+    $foto = $_POST['foto']; // atau proses upload file
+
+    mysqli_query($conn, "INSERT INTO users (nama, ttl, alamat, email, foto) VALUES ('$nama', '$ttl', '$alamat', '$email', '$foto')");
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -116,6 +125,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       </select>
     </div>
     <button type="submit" class="btn btn-primary">Tambah User</button>
+    <a href="index.php" class="btn btn-secondary">Kembali</a>
+  </form>
+
+  <h3 class="mt-5">Atau</h3>
+  <form method="post">
+    <div class="mb-3">
+      <label>Nama Lengkap</label>
+      <input type="text" name="nama" class="form-control" placeholder="Nama Lengkap" required>
+    </div>
+    <div class="mb-3">
+      <label>Tempat, Tanggal Lahir</label>
+      <input type="text" name="ttl" class="form-control" placeholder="Tempat, Tanggal Lahir" required>
+    </div>
+    <div class="mb-3">
+      <label>Alamat</label>
+      <input type="text" name="alamat" class="form-control" placeholder="Alamat" required>
+    </div>
+    <div class="mb-3">
+      <label>Email</label>
+      <input type="email" name="email" class="form-control" placeholder="Email" required>
+    </div>
+    <div class="mb-3">
+      <label>Foto (nama file)</label>
+      <input type="text" name="foto" class="form-control" placeholder="Foto (nama file)" required>
+    </div>
+    <button type="submit" name="tambah" class="btn btn-success">Tambah User</button>
     <a href="index.php" class="btn btn-secondary">Kembali</a>
   </form>
 </div>

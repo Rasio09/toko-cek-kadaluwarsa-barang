@@ -82,9 +82,6 @@ if ($search !== '') {
             <li><a class="dropdown-item" href="record.php">Record Barang</a></li>
           </ul>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="brand.php">List Brand</a>
-        </li>
         <?php if ($role === 'admin'): ?>
         <li class="nav-item">
           <a class="nav-link" href="user_management.php">User Management</a>
