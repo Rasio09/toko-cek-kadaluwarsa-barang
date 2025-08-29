@@ -114,5 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   </form>
 </div>
 
+<!-- Tambahkan ini sebelum menutup body -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
