@@ -11,7 +11,6 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'user') {
     exit;
 }
 
-// pastikan variabel role tersedia untuk navbar
 $role = $_SESSION['user']['role'];
 $user_id = $_SESSION['user']['id'];
 $username = $_SESSION['user']['username'];
@@ -21,19 +20,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['barang_id']) && isset
     $barang_id = (int) $_POST['barang_id'];
     $jumlah = (int) $_POST['jumlah'];
 
-    // Ambil harga jual dari tabel barang
-    $q_barang = mysqli_query($conn, "SELECT harga_jual FROM barang WHERE id = '$barang_id'");
+    // Ambil stok & harga jual dari tabel barang
+    $q_barang = mysqli_query($conn, "SELECT jumlah, harga_jual, nama_barang FROM barang WHERE id = '$barang_id'");
     $barang = mysqli_fetch_assoc($q_barang);
-    $harga_jual = $barang['harga_jual'] ?? 0;
 
-    $total_harga = $jumlah * $harga_jual;
+    if ($barang) {
+        $stok = (int)$barang['jumlah'];
+        $harga_jual = (int)$barang['harga_jual'];
+        $nama_barang = $barang['nama_barang'];
 
-    // Simpan ke tabel penjualan
-    $sql = "INSERT INTO penjualan (user_id, barang_id, jumlah, total_harga) 
-            VALUES ('$user_id', '$barang_id', '$jumlah', '$total_harga')";
-    mysqli_query($conn, $sql);
-    header("Location: penjualan.php");
-    exit;
+        if ($stok >= $jumlah && $jumlah > 0) {
+            $total_harga = $jumlah * $harga_jual;
+
+            // Simpan ke tabel penjualan
+            $sql = "INSERT INTO penjualan (user_id, barang_id, jumlah, total_harga) 
+                    VALUES ('$user_id', '$barang_id', '$jumlah', '$total_harga')";
+            mysqli_query($conn, $sql);
+
+            // Update stok barang
+            $stok_baru = $stok - $jumlah;
+            mysqli_query($conn, "UPDATE barang SET jumlah = '$stok_baru' WHERE id = '$barang_id'");
+
+            header("Location: penjualan.php?success=1");
+            exit;
+        } else {
+            // Jika stok tidak cukup
+            header("Location: penjualan.php?error=stok_kurang&barang=" . urlencode($nama_barang));
+            exit;
+        }
+    } else {
+        header("Location: penjualan.php?error=barang_tidak_ditemukan");
+        exit;
+    }
 }
 
 // Ambil data barang untuk dropdown
@@ -47,6 +65,7 @@ $penjualan_list = mysqli_query($conn,
      WHERE p.user_id = '$user_id' 
      ORDER BY p.tanggal DESC");
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
