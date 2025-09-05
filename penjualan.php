@@ -16,11 +16,10 @@ $user_id = $_SESSION['user']['id'];
 $username = $_SESSION['user']['username'];
 
 // Handle form submit (tambah penjualan)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['barang_id']) && isset($_POST['jumlah'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['barang_id']) && isset($_POST['jumlah']) && !isset($_POST['batal_transaksi'])) {
     $barang_id = (int) $_POST['barang_id'];
     $jumlah = (int) $_POST['jumlah'];
 
-    // Ambil stok & harga jual dari tabel barang
     $q_barang = mysqli_query($conn, "SELECT jumlah, harga_jual, nama_barang FROM barang WHERE id = '$barang_id'");
     $barang = mysqli_fetch_assoc($q_barang);
 
@@ -32,19 +31,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['barang_id']) && isset
         if ($stok >= $jumlah && $jumlah > 0) {
             $total_harga = $jumlah * $harga_jual;
 
-            // Simpan ke tabel penjualan
-            $sql = "INSERT INTO penjualan (user_id, barang_id, jumlah, total_harga) 
-                    VALUES ('$user_id', '$barang_id', '$jumlah', '$total_harga')";
-            mysqli_query($conn, $sql);
+            mysqli_query($conn, "INSERT INTO penjualan (user_id, barang_id, jumlah, total_harga) 
+                                 VALUES ('$user_id', '$barang_id', '$jumlah', '$total_harga')");
 
-            // Update stok barang
             $stok_baru = $stok - $jumlah;
             mysqli_query($conn, "UPDATE barang SET jumlah = '$stok_baru' WHERE id = '$barang_id'");
 
             header("Location: penjualan.php?success=1");
             exit;
         } else {
-            // Jika stok tidak cukup
             header("Location: penjualan.php?error=stok_kurang&barang=" . urlencode($nama_barang));
             exit;
         }
@@ -54,29 +49,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['barang_id']) && isset
     }
 }
 
-// Ambil data barang untuk dropdown
+// Handle batal transaksi
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['batal_transaksi'])) {
+    $penjualan_id = (int) $_POST['penjualan_id'];
+    $alasan = mysqli_real_escape_string($conn, $_POST['alasan']);
+
+    $q_penjualan = mysqli_query($conn, "SELECT * FROM penjualan WHERE id='$penjualan_id' AND user_id='$user_id'");
+    $penjualan = mysqli_fetch_assoc($q_penjualan);
+
+    if ($penjualan) {
+        $barang_id = $penjualan['barang_id'];
+        $jumlah = $penjualan['jumlah'];
+        $total_harga = $penjualan['total_harga'];
+        $tanggal_penjualan = $penjualan['tanggal'];
+
+        // Kembalikan stok barang
+        mysqli_query($conn, "UPDATE barang SET jumlah = jumlah + $jumlah WHERE id='$barang_id'");
+
+        // Simpan ke riwayat_hapus_penjualan
+        mysqli_query($conn, "INSERT INTO riwayat_hapus_penjualan 
+            (user_id, penjualan_id, barang_id, jumlah, total_harga, tanggal_penjualan, alasan_hapus, tanggal_hapus)
+            VALUES ('$user_id', '$penjualan_id', '$barang_id', '$jumlah', '$total_harga', '$tanggal_penjualan', '$alasan', NOW())");
+
+        // Hapus dari tabel penjualan
+        mysqli_query($conn, "DELETE FROM penjualan WHERE id='$penjualan_id'");
+
+        header("Location: penjualan.php?batal_success=1");
+        exit;
+    }
+}
+
+// Data barang untuk dropdown
 $barang_list = mysqli_query($conn, "SELECT * FROM barang");
 
-// Ambil data penjualan user ini (JOIN untuk mendapat nama_barang)
-$penjualan_list = mysqli_query($conn, 
-    "SELECT p.*, b.nama_barang 
-     FROM penjualan p 
-     JOIN barang b ON p.barang_id = b.id 
-     WHERE p.user_id = '$user_id' 
-     ORDER BY p.tanggal DESC");
+// Riwayat penjualan user
+$penjualan_list = mysqli_query($conn, "SELECT p.*, b.nama_barang 
+                                       FROM penjualan p 
+                                       JOIN barang b ON p.barang_id = b.id 
+                                       WHERE p.user_id = '$user_id' 
+                                       ORDER BY p.tanggal DESC");
 ?>
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>Penjualan - <?= htmlspecialchars($username) ?></title>
-  <!-- Bootstrap CSS + Icons -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <meta charset="UTF-8">
+    <title>Penjualan - <?= htmlspecialchars($username) ?></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 </head>
 <body class="p-4">
-<!-- Navbar Bootstrap (sama seperti halaman dashboard) -->
+
+<!-- Navbar Bootstrap -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
   <div class="container">
     <a class="navbar-brand" href="index.php">TokoApp</a>
@@ -103,7 +126,7 @@ $penjualan_list = mysqli_query($conn,
         </li>
         <li class="nav-item">
           <?php if ($role === 'user'): ?>
-            <a href="penjualan.php" class="nav-link active">Penjualan</a>
+            <a href="penjualan.php" class="nav-link">Penjualan</a>
           <?php endif; ?>
         </li>
         <?php if ($role === 'admin'): ?>
@@ -112,10 +135,9 @@ $penjualan_list = mysqli_query($conn,
         </li>
         <?php endif; ?>
       </ul>
-
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
         <li class="nav-item d-flex align-items-center me-2">
-          <span class="text-white fw-semibold"><?= htmlspecialchars($username) ?></span>
+          <span class="text-white fw-semibold"><?= htmlspecialchars($_SESSION['user']['username']) ?></span>
         </li>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -137,89 +159,92 @@ $penjualan_list = mysqli_query($conn,
   </div>
 </nav>
 
-<!-- Modal Logout (sama seperti halaman lain) -->
-<div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-danger text-white">
-        <h5 class="modal-title" id="logoutModalLabel">Konfirmasi Logout</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body text-center">
-        <p>Apakah Anda yakin ingin logout?</p>
-      </div>
-      <div class="modal-footer justify-content-center">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tidak</button>
-        <a href="logout.php" class="btn btn-danger">Ya, Logout</a>
-      </div>
-    </div>
-  </div>
-</div>
-
 <div class="container">
-  <h2>Transaksi Penjualan - <?= htmlspecialchars($username) ?></h2>
+    <h2>Transaksi Penjualan - <?= htmlspecialchars($username) ?></h2>
 
-  <!-- Tombol Riwayat Hapus (hanya user) -->
-  <?php if ($role === 'user'): ?>
-    <a href="riwayat_hapus_penjualan.php" class="btn btn-warning mb-3">
-      <i class="bi bi-clock-history"></i> Riwayat Hapus Penjualan
-    </a>
-  <?php endif; ?>
+    <form method="POST" class="row g-3 mb-4">
+        <div class="col-md-5">
+            <label class="form-label">Pilih Barang</label>
+            <select name="barang_id" class="form-select" required>
+                <option value="">-- Pilih Barang --</option>
+                <?php if ($barang_list) { mysqli_data_seek($barang_list, 0); while ($b = mysqli_fetch_assoc($barang_list)): ?>
+                    <option value="<?= $b['id'] ?>"><?= htmlspecialchars($b['nama_barang']) ?> (Rp <?= number_format($b['harga_jual'], 0, ',', '.') ?>)</option>
+                <?php endwhile; } ?>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Jumlah</label>
+            <input type="number" name="jumlah" class="form-control" required min="1">
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">Tambah Penjualan</button>
+        </div>
+    </form>
 
-  <!-- Form Input Penjualan -->
-  <form method="POST" class="row g-3 mb-4">
-    <div class="col-md-5">
-      <label class="form-label">Pilih Barang</label>
-      <select name="barang_id" class="form-select" required>
-        <option value="">-- Pilih Barang --</option>
-        <?php 
-        // reset pointer result (jika perlu)
-        if ($barang_list) {
-            mysqli_data_seek($barang_list, 0);
-            while ($b = mysqli_fetch_assoc($barang_list)): ?>
-              <option value="<?= $b['id'] ?>"><?= htmlspecialchars($b['nama_barang']) ?> (Rp <?= number_format($b['harga_jual'], 0, ',', '.') ?>)</option>
-        <?php endwhile; } ?>
-      </select>
-    </div>
-    <div class="col-md-3">
-      <label class="form-label">Jumlah</label>
-      <input type="number" name="jumlah" class="form-control" required min="1">
-    </div>
-    <div class="col-md-4 d-flex align-items-end">
-      <button type="submit" class="btn btn-primary w-100">Tambah Penjualan</button>
-    </div>
-  </form>
+    <!-- Tabel Riwayat Penjualan -->
+    <div class="card">
+        <div class="card-header bg-dark text-white">Riwayat Penjualan Anda</div>
+        <div class="card-body">
+            <table class="table table-bordered table-striped">
+                <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Barang</th>
+                    <th>Jumlah</th>
+                    <th>Total Harga</th>
+                    <th>Tanggal</th>
+                    <th>Aksi</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php $no = 1; while ($p = mysqli_fetch_assoc($penjualan_list)): ?>
+                    <tr>
+                        <td><?= $no++ ?></td>
+                        <td><?= htmlspecialchars($p['nama_barang']) ?></td>
+                        <td><?= (int)$p['jumlah'] ?></td>
+                        <td>Rp <?= number_format($p['total_harga'], 0, ',', '.') ?></td>
+                        <td><?= htmlspecialchars($p['tanggal']) ?></td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#batalModal<?= $p['id'] ?>">
+                                Batal
+                            </button>
+                        </td>
+                    </tr>
 
-  <!-- Tabel Riwayat Penjualan -->
-  <div class="card">
-    <div class="card-header bg-dark text-white">Riwayat Penjualan Anda</div>
-    <div class="card-body">
-      <table class="table table-bordered table-striped">
-        <thead>
-          <tr>
-            <th>No</th>
-            <th>Barang</th>
-            <th>Jumlah</th>
-            <th>Total Harga</th>
-            <th>Tanggal</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php $no = 1; while ($p = mysqli_fetch_assoc($penjualan_list)): ?>
-          <tr>
-            <td><?= $no++ ?></td>
-            <td><?= htmlspecialchars($p['nama_barang']) ?></td>
-            <td><?= (int)$p['jumlah'] ?></td>
-            <td>Rp <?= number_format($p['total_harga'], 0, ',', '.') ?></td>
-            <td><?= htmlspecialchars($p['tanggal']) ?></td>
-          </tr>
-          <?php endwhile; ?>
-        </tbody>
-      </table>
-    </div>
-  </div>
+                    <!-- Modal Konfirmasi Batal -->
+                    <div class="modal fade" id="batalModal<?= $p['id'] ?>" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <form method="POST">
+                                    <div class="modal-header bg-danger text-white">
+                                        <h5 class="modal-title">Konfirmasi Batal Transaksi</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Apakah Anda yakin ingin membatalkan transaksi <strong><?= htmlspecialchars($p['nama_barang']) ?></strong>?</p>
+                                        <div class="mb-3">
+                                            <label class="form-label">Alasan Pembatalan</label>
+                                            <textarea name="alasan" class="form-control" required></textarea>
+                                        </div>
+                                        <input type="hidden" name="penjualan_id" value="<?= $p['id'] ?>">
+                                        <input type="hidden" name="batal_transaksi" value="1">
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tidak</button>
+                                        <button type="submit" class="btn btn-danger">Ya, Batalkan</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
 
-  <a href="index.php" class="btn btn-secondary mt-3">⬅ Kembali</a>
+                <?php endwhile; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <a href="index.php" class="btn btn-secondary mt-3">⬅ Kembali</a>
 </div>
 
 <!-- Bootstrap JS -->
