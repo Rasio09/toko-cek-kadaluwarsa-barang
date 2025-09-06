@@ -245,6 +245,26 @@ $penjualan_list = mysqli_query($conn, "SELECT p.*, b.nama_barang
     </div>
 
     <a href="index.php" class="btn btn-secondary mt-3">⬅ Kembali</a>
+    <a href="riwayat_batal_penjualan.php" class="btn btn-warning mt-3 ms-2">📜 Riwayat Batal Penjualan</a>
+
+</div>
+<!-- Modal Logout -->
+<div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="logoutModalLabel">Konfirmasi Logout</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <p>Apakah Anda yakin ingin logout?</p>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tidak</button>
+        <a href="logout.php" class="btn btn-danger">Ya, Logout</a>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Bootstrap JS -->
