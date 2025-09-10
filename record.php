@@ -82,6 +82,11 @@ if ($search !== '') {
             <li><a class="dropdown-item" href="record.php">Record Barang</a></li>
           </ul>
         </li>
+        <li class="nav-item">
+          <?php if ($role === 'user'): ?>
+            <a href="penjualan.php" class="nav-link">Penjualan</a>
+          <?php endif; ?>
+        </li>
         <?php if ($role === 'admin'): ?>
         <li class="nav-item">
           <a class="nav-link" href="user_management.php">User Management</a>
