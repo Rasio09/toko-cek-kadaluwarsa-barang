@@ -153,15 +153,55 @@ $users = mysqli_query($conn, "SELECT * FROM users ORDER BY id ASC");
         <td><?= htmlspecialchars($row['username']) ?></td>
         <td><?= $row['role'] ?></td>
         <td>
-          <a href="user_management.php?delete=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin ingin menghapus user ini?')">
+          <button 
+            class="btn btn-sm btn-danger" 
+            data-bs-toggle="modal" 
+            data-bs-target="#deleteModal" 
+            data-id="<?= $row['id'] ?>" 
+            data-username="<?= htmlspecialchars($row['username']) ?>">
             <i class="bi bi-trash"></i> Hapus
-          </a>
+          </button>
         </td>
       </tr>
       <?php endwhile; ?>
     </tbody>
   </table>
 </div>
+
+<!-- Modal Hapus User -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Konfirmasi Hapus User</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <p id="deleteMessage">Apakah Anda yakin ingin menghapus user ini?</p>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <a href="#" id="confirmDelete" class="btn btn-danger">Ya, Hapus</a>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Kirim data user ke modal
+const deleteModal = document.getElementById('deleteModal');
+deleteModal.addEventListener('show.bs.modal', function (event) {
+  let button = event.relatedTarget;
+  let userId = button.getAttribute('data-id');
+  let username = button.getAttribute('data-username');
+  
+  let deleteMsg = deleteModal.querySelector('#deleteMessage');
+  let confirmBtn = deleteModal.querySelector('#confirmDelete');
+  
+  deleteMsg.textContent = "Apakah Anda yakin ingin menghapus user '" + username + "' ?";
+  confirmBtn.href = "user_management.php?delete=" + userId;
+});
+</script>
 </body>
 </html>
