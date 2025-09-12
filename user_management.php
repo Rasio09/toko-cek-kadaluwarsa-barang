@@ -9,23 +9,39 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
 }
 $role = $_SESSION['user']['role'];
 $msg = '';
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+
+// Tambah user baru
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['username'])) {
     $username = mysqli_real_escape_string($conn, $_POST['username']);
     $password = md5($_POST['password']);
-    $role = $_POST['role'];
-    $sql = "INSERT INTO users (username, password, role) VALUES ('$username', '$password', '$role')";
+    $roleUser = $_POST['role'];
+    $sql = "INSERT INTO users (username, password, role) VALUES ('$username', '$password', '$roleUser')";
     if (mysqli_query($conn, $sql)) {
         $msg = "User berhasil ditambahkan!";
     } else {
         $msg = "Gagal: " . mysqli_error($conn);
     }
 }
+
+// Hapus user
+if (isset($_GET['delete'])) {
+    $id_delete = intval($_GET['delete']);
+    $sql = "DELETE FROM users WHERE id = $id_delete";
+    if (mysqli_query($conn, $sql)) {
+        $msg = "User berhasil dihapus!";
+    } else {
+        $msg = "Gagal menghapus: " . mysqli_error($conn);
+    }
+}
+
+// Ambil semua user
+$users = mysqli_query($conn, "SELECT * FROM users ORDER BY id ASC");
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Tambah User</title>
+  <title>User Management</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 </head>
@@ -46,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
         <?php if ($role === 'admin'): ?>
         <li class="nav-item">
-          <a class="nav-link" href="user_management.php">User Management</a>
+          <a class="nav-link active" href="user_management.php">User Management</a>
         </li>
         <?php endif; ?>
       </ul>
@@ -93,7 +109,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   </div>
 </div>
 
-
 <div class="container">
   <h2>Tambah User Baru</h2>
   <?php if ($msg): ?>
@@ -118,6 +133,34 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <button type="submit" class="btn btn-primary">Tambah User</button>
     <a href="index.php" class="btn btn-secondary">Kembali</a>
   </form>
+
+  <hr class="my-4">
+
+  <h3>Daftar User</h3>
+  <table class="table table-bordered table-striped mt-3">
+    <thead class="table-dark">
+      <tr>
+        <th>ID</th>
+        <th>Username</th>
+        <th>Role</th>
+        <th>Aksi</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php while ($row = mysqli_fetch_assoc($users)): ?>
+      <tr>
+        <td><?= $row['id'] ?></td>
+        <td><?= htmlspecialchars($row['username']) ?></td>
+        <td><?= $row['role'] ?></td>
+        <td>
+          <a href="user_management.php?delete=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin ingin menghapus user ini?')">
+            <i class="bi bi-trash"></i> Hapus
+          </a>
+        </td>
+      </tr>
+      <?php endwhile; ?>
+    </tbody>
+  </table>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
