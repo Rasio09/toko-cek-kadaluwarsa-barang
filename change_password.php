@@ -79,6 +79,11 @@ $role = $_SESSION['user']['role'];
             <li><a class="dropdown-item" href="record.php">Record Barang</a></li>
           </ul>
         </li>
+        <li class="nav-item">
+          <?php if ($role === 'user'): ?>
+            <a href="penjualan.php" class="nav-link">Penjualan</a>
+          <?php endif; ?>
+        </li>
         <?php if ($role === 'admin'): ?>
         <li class="nav-item">
           <a class="nav-link" href="user_management.php">User Management</a>
@@ -95,7 +100,7 @@ $role = $_SESSION['user']['role'];
           </a>
           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
             <li><a class="dropdown-item" href="profil.php">Profil</a></li>
-            <li><a class="dropdown-item active" href="change_password.php">Change Password</a></li>
+            <li><a class="dropdown-item" href="change_password.php">Change Password</a></li>
             <li><hr class="dropdown-divider"></li>
             <li>
               <button class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#logoutModal">
